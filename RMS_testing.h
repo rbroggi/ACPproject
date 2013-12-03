@@ -11,6 +11,7 @@
 
 #include <iostream>
 #include <vector>
+#include <string>
 
 
 
@@ -53,6 +54,12 @@ using namespace std;
 //Creddo che possiamo assumere che nell'ambito del nostro progetto (Recommended system) le matrici sparse con cui lavoreremo non hanno nè righe ne collone completamente vuote (corriponderebbero a users/item che non forniscono alcuna informazione e quindi impossibili da raccomandare)
 
 
+void error (string & str){
+    cerr<<str<<endl;
+    exit(1);
+
+}
+
 template <class T>
 class sparse_m {
     
@@ -94,14 +101,21 @@ public:
     
     //accedere agli elementi:
     //Per l-value - NON IMPLEMENTATA
-    T & operator() (const unsigned int i, const unsigned int j);
+    //T & operator() (const unsigned int i, const unsigned int j);
     
-    //Per r-value - NON FUNZIONANTE
-    T operator() (const unsigned int i, const unsigned int j) const;
+    //Per r-value - FUNZIONANTE (forse da ottimizzare)
+    T operator () (const unsigned int i, const unsigned int j) const;
     
     
     //clonare l'emento - NON IMPLEMENTATA
     sparse_m & operator = (const sparse_m<T> & clone );
+    
+    
+    int row_num(){return (AI.size()-1);}
+    
+    int coll_num(){return col_num;}
+    
+    int non_null_size(){return A.size();}
     
     
     //Stampa i tre vettori in riga A,AI,AJ - FUNZIONANTE
@@ -168,18 +182,27 @@ sparse_m<T>::sparse_m(const vector<vector<T> > &initialiser){
 }
 
 
+//EVENTUALMENTE DA OTTIMIZARE - FUNZIONANTE
 template<class T>
 T
-sparse_m<T>::operator() (const unsigned int i, const unsigned int j) const {
+sparse_m<T>::operator () (const unsigned int i, const unsigned int j) const {
     
     //Innanzitutto verifichiamo se l'elemento è zero poiché é la più grande possibilità:
     //In questo senso verifico se tra gli elementi della riga i (sono AI(i+1)- A(i)) qualcuno ha numer collona j
     unsigned int p;
     
-    for(p = AI[i]; p < AI[i+1] && AJ[p] < j; p++)
+    if(i >  (AI.size()-2) || j > (col_num - 1)){
+        string s1("Out of bonds");
+        error(s1);
+    }
+    
+    p = AI[i];
+    while(p < (AI[i+1]-1) && AJ[p] < j){
+        p++;
+    }
         
     
-    if (j== p)
+    if (j== AJ[p])
         return A[p];
     
     else
