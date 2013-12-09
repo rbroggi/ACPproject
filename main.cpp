@@ -1,35 +1,57 @@
-#include <iostream>
-#include <vector>
-#include "RMS_testing.h"
-
+#include<iostream>
+#include<fstream>
+#include "RMS_testing_2.h"
 
 using namespace std;
 
+int main() {
+    
+    ifstream myReadFile, myReadFile2;
+    myReadFile.open("INPUT_recall.txt");
 
-int main (){
+    vector<data> v1;
+    vector<data> v2;
     
-    vector<int> v1(5,0); v1[0]=1; v1[3]=2;
-    vector<int> v2(5,0); v2[1]=3; v2[2]=4; v2[4]=5;
-    vector<int> v3(5,0); v3[0]=6; v3[2]=7; v3[3]=8; v3[4]=9;
-    vector<int> v4(5,0); v4[2]=10; v4[3]=11;
-    vector<int> v5(5,0); v5[4]=12;
-    vector<int> v6(5,0); v6[1]=13; v6[2]=14;
     
-    vector<vector<int> > v; v.push_back(v1); v.push_back(v2); v.push_back(v3); v.push_back(v4); v.push_back(v5); v.push_back(v6);
-    
-    sparse_m<int> mat(v);
-    
-    mat.print();
-
-    cout<<endl;
-
-    for (int i = 0; i < mat.row_num(); i++) {
-        for (int j = 0; j < mat.coll_num(); j++) {
-            cout<<mat(i,j)<<"\t";
+    if (myReadFile.is_open()) {
+        while (!myReadFile.eof()) {
+            int it, usr, pos;
+            double rate;
+            
+            myReadFile >>it>>usr>>pos>>rate;
+            
+            data d(it,usr,rate,pos);
+            
+            v1.push_back(d);
+            
+            
         }
-        cout<<endl;
+    }
+    myReadFile.close();
+    
+    
+    cout<<"Recall is: "<<RMS_recall_robust(v1,10)<<endl;
+    
+    
+    myReadFile2.open("INPUT_fallout.txt");
+    
+    
+    if (myReadFile2.is_open()) {
+        while (!myReadFile2.eof()) {
+            int it, usr, pos;
+            double rate;
+            
+            myReadFile2 >>it>>usr>>pos>>rate;
+            
+            data d(it,usr,rate,pos);
+            
+            v2.push_back(d);
+            
+            
+        }
     }
     
+    cout<<"Fallout is: "<<RMS_fallout_robust(v2,10)<<endl;
     
-    
-    }
+    return 0;
+}
