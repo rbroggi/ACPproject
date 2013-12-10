@@ -263,25 +263,8 @@ double RMS_precision_robust (const vector<data> & relevant, const int N){
     
 };
 
-void print (const vector<data> & relevant){
-
-    vector<int> v;
-    
-    for (auto it = relevant.begin(); it!=relevant.end(); it++)
-        v.push_back(it->usr_num());
-    
-    sort(v.begin(),v.end());
-    
-    cout<<endl;
-    
-    for (auto it = v.begin(); it!= v.end(); it++) {
-        cout<<*it<<"\t";
-    }
-
-    cout<<endl;
-    
-};
-
+//calcola l'area sotto la curva ROC (l'algoritmo è tanto meglio con l'aumento di quest'area che è sempre compresa tra 0 e 1 dove 0.5 sarebbe l'area
+//di un algoritmo che fa previsioni in un modo aleatorie (uguali proporzioni tra TP e FP) )
 double AUC_ROC (const vector<data> & relevant,const vector<data> & not_relevant){
     
     vector<double> recall_n; recall_n.push_back(0);
@@ -309,7 +292,83 @@ double AUC_ROC (const vector<data> & relevant,const vector<data> & not_relevant)
     
 };
 
+//Funzionante
+double RMS_ARHR (const vector<data> & relevant, const int N){
+    
+    if (relevant.size() == 0) {
+        
+        string s1("The relevant data must have contents! ");
+        error(s1);
+        
+    }
+    
+    
+    double numerator = 0;
+    int hits = 0;
+    
+    for (auto it = relevant.begin(); it != relevant.end(); it++) {
+        if (it->my_pos() <= N){
+            numerator+=(1.0/(it->my_pos()));
+            hits++;
+        }
+    }
+    
+    double h = hits;
+    
+    return (numerator/hits);
+    
+};
 
+
+//Funzionante
+double RMS_ARP (const vector<data> & relevant, const int N){
+    
+    if (relevant.size() == 0) {
+        
+        string s1("The relevant data must have contents! ");
+        error(s1);
+        
+    }
+    
+    
+    double numerator = 0;
+    int hits = 0;
+    
+    for (auto it = relevant.begin(); it != relevant.end(); it++) {
+        if (it->my_pos() <= N){
+            double temp= it->my_pos();
+            numerator+=(temp/N);
+            hits++;
+        }
+    }
+    
+    double h = hits;
+    
+    return (numerator/hits);
+    
+};
+
+
+
+//Non necessaria. L'avevo usata solo per sapere se i dati erano continui
+void print (const vector<data> & relevant){
+    
+    vector<int> v;
+    
+    for (auto it = relevant.begin(); it!=relevant.end(); it++)
+        v.push_back(it->usr_num());
+    
+    sort(v.begin(),v.end());
+    
+    cout<<endl;
+    
+    for (auto it = v.begin(); it!= v.end(); it++) {
+        cout<<*it<<"\t";
+    }
+    
+    cout<<endl;
+    
+};
 
 
 

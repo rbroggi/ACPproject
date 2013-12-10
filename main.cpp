@@ -50,6 +50,10 @@ int main() {
     
     cout<<"The area under the ROC curve is: "<<AUC_ROC(v1,v2)<<endl;
     
+    cout<<"The ARHR is: "<<RMS_ARHR(v1,10)<<endl;
+    
+    cout<<"The ARP is: "<<RMS_ARP(v1,10)<<endl;
+    
     //cout<<"Fallout is: "<<RMS_fallout_robust(v2,10)<<endl;
     
     //cout<<"Precision is: "<<RMS_precision (v1, 10)<<endl;
