@@ -30,9 +30,6 @@ int main() {
     myReadFile.close();
     
     
-    cout<<"Recall is: "<<RMS_recall_robust(v1,10)<<endl;
-    
-    
     myReadFile2.open("INPUT_fallout.txt");
     
     
@@ -51,7 +48,13 @@ int main() {
         }
     }
     
-    cout<<"Fallout is: "<<RMS_fallout_robust(v2,10)<<endl;
+    cout<<"The area under the ROC curve is: "<<AUC_ROC(v1,v2)<<endl;
+    
+    //cout<<"Fallout is: "<<RMS_fallout_robust(v2,10)<<endl;
+    
+    //cout<<"Precision is: "<<RMS_precision (v1, 10)<<endl;
+    
+    //cout<<"Robust Precision is: "<<RMS_precision_robust (v1, 10)<<endl;
     
     return 0;
 }
