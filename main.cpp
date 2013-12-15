@@ -123,6 +123,8 @@ int main() {
     
     cout<<"Spearsman rho: "<<compute_s_rho(v3,v4)<<endl;
     
+    cout<<"Kendau tau: "<<compute_k_tau(v3,v4)<<endl;
+    
     
     //draw_ROC(v1,v2); ->NOT WORKING
     
