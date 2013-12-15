@@ -462,15 +462,45 @@ double compute_s_rho (const vector<pair<int,double> > & prevision,const vector<p
     sort(p.begin(),p.end(),comparison_func_rate);
     sort(r.begin(),r.end(),comparison_func_rate);
     
+    /*   - per testare
+    //inizio test print (da cancellare fino alla prossima osservazione)
+    cout<<endl<<endl<<"Vectors ordered in rate: "<<endl;
+    
+    for (int i = 0; i < p.size(); i++) {
+        cout <<p[i].first<<"\t";
+    }
+    
+    cout<<endl;
+    
+    for (int i = 0; i < p.size(); i++) {
+        cout <<setprecision(4)<<p[i].second<<"\t";
+    }
+    
+    cout<<endl<<endl;
+    
+    for (int i = 0; i < r.size(); i++) {
+        cout <<r[i].first<<"\t";
+    }
+    
+    cout<<endl;
+    
+    for (int i = 0; i < r.size(); i++) {
+        cout <<setprecision(4)<<r[i].second<<"\t";
+    }
+    
+    cout<<endl<<endl;
+    //fine test
+    */
+     
     //taglio gli elementi senza rate:
     auto it = p.begin();
     auto it2 = r.begin();
     
-    while(it != p.end() || it->second == -1) {
+    while(it != p.end() && it->second != -1) {
         it++;
     }
     
-    while(it2 != r.end() || it2->second == -1) {
+    while(it2 != r.end() && it2->second != -1) {
         it2++;
     }
     
@@ -480,17 +510,97 @@ double compute_s_rho (const vector<pair<int,double> > & prevision,const vector<p
     
     if (it2 != r.end())
         r.erase(it2,r.end());
+    
+    /*
+    //inizio test print (da cancellare fino alla prossima osservazione)
+    cout<<endl<<endl<<"Vectors ordered in rate, senza unrated: "<<endl;
+    
+    for (int i = 0; i < p.size(); i++) {
+        cout <<p[i].first<<"\t";
+    }
+    
+    cout<<endl;
+    
+    for (int i = 0; i < p.size(); i++) {
+        cout <<setprecision(4)<<p[i].second<<"\t";
+    }
+    
+    cout<<endl<<endl;
+    
+    for (int i = 0; i < r.size(); i++) {
+        cout <<r[i].first<<"\t";
+    }
+    
+    cout<<endl;
+    
+    for (int i = 0; i < r.size(); i++) {
+        cout <<setprecision(4)<<r[i].second<<"\t";
+    }
+    
+    cout<<endl<<endl;
+    //fine test
+    */
 
     
     //in questi metto per ogni item il suo corrisondente rank
     vector<pair<int,int> > ranked_rated_1;
     vector<pair<int,int> > ranked_rated_2;
     
-    for (int i = 0; i < p.size(); i++)
-        ranked_rated_1.push_back(make_pair(p[i].first,i));
+    int rank = 1;
+    
+    for (int i = 0; i < p.size(); i++){
+        //Garantire che è strettamente minore (perché per ratting uguali il rank dev'essere uguale)
+        if (i != 0) {
+            if (p[i].second < p[i-1].second) {
+                rank++;
+            }
+        }
+        ranked_rated_1.push_back(make_pair(p[i].first,rank));
+        
+    }
    
-    for (int i = 0; i < r.size(); i++)
-        ranked_rated_2.push_back(make_pair(r[i].first,i));
+    rank = 1;
+    
+    for (int i = 0; i < r.size(); i++){
+        
+        if (i != 0) {
+            if (r[i].second < r[i-1].second) {
+                rank++;
+            }
+        }
+        
+        ranked_rated_2.push_back(make_pair(r[i].first,rank));
+    }
+    
+    /*
+    //inizio test print (da cancellare fino alla prossima osservazione)
+    cout<<endl<<endl<<"Vectors ordered in rate, senza unrated e con rank: "<<endl;
+    
+    for (int i = 0; i < ranked_rated_1.size(); i++) {
+        cout <<ranked_rated_1[i].first<<"\t";
+    }
+    
+    cout<<endl;
+    
+    for (int i = 0; i < ranked_rated_1.size(); i++) {
+        cout <<setprecision(4)<<ranked_rated_1[i].second<<"\t";
+    }
+    
+    cout<<endl<<endl;
+    
+    for (int i = 0; i < ranked_rated_2.size(); i++) {
+        cout <<ranked_rated_2[i].first<<"\t";
+    }
+    
+    cout<<endl;
+    
+    for (int i = 0; i < ranked_rated_2.size(); i++) {
+        cout <<setprecision(4)<<ranked_rated_2[i].second<<"\t";
+    }
+    
+    cout<<endl<<endl;
+    //fine test
+     */
     
     //ordinando i vettori in ordine di item
     sort(ranked_rated_1.begin(),ranked_rated_1.end(),comparison_func_item);
@@ -557,6 +667,27 @@ double compute_s_rho (const vector<pair<int,double> > & prevision,const vector<p
             
         }
     }
+    
+    /*
+    //inizio test print (da cancellare fino alla prossima osservazione)
+    cout<<endl<<endl<<"Vectors sent to func : "<<endl;
+    
+    for (int i = 0; i < p_to_send.size(); i++) {
+        cout <<p_to_send[i]<<"\t";
+    }
+    
+    cout<<endl;
+    
+    
+    
+    for (int i = 0; i < r_to_send.size(); i++) {
+        cout <<r_to_send[i]<<"\t";
+    }
+    
+    
+    cout<<endl<<endl;
+    //fine test
+     
     
     //A questo punto chiamiamo la funzione s_rho:
     
