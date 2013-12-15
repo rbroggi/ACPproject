@@ -687,7 +687,7 @@ double compute_s_rho (const vector<pair<int,double> > & prevision,const vector<p
     
     cout<<endl<<endl;
     //fine test
-     
+    */ 
     
     //A questo punto chiamiamo la funzione s_rho:
     
