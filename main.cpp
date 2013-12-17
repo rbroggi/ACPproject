@@ -126,7 +126,7 @@ int main() {
     cout<<"Kendau tau: "<<compute_k_tau(v3,v4)<<endl;
     
     
-    //draw_ROC(v1,v2); ->NOT WORKING
+    draw_ROC(v1,v2);
     
     //cout<<"Fallout is: "<<RMS_fallout_robust(v2,10)<<endl;
     

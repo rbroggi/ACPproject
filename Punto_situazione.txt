@@ -1,0 +1,22 @@
+Allora. Visione generale:
+
+ -Nostro lavoro è valutare i metodi di raccomandazione. Per farlo, usiamo le metriche, che sono la misura della qualità di questi metodi. Le metriche però possono essere calcolate solo se hai un riferimento di voti(o classifiche) reali e preesistenti per poter calcolare la “distanza”, attraverso le metriche, tra predizione e dati reali. 
+
+- È ovvio che questa “distanza” non è funzione soltanto del metodo di predizione ma anche da quali/quanti dati risolviamo omettere. 
+
+- In questo senso, le metriche le ho scritte come se avessi già le previsione e i dati reali da confrontare fra di loro. Si da il caso che per qualche metrica (Recall, Fallout, ARHR, ARP, DCG e “precision”) il così detto “validation set” (insieme di elementi del test-set che si omettono e si prevedono con l’algoritmo di raccomandazione) è intrinseco, cioè saranno i termini rilevanti (con voto > 4 ad esempio) o non rilevanti (esempio: voto < 2) dei dati del test-set che ho in INPUT nella URM. In queste metriche, non è nemmeno necessario avere il valore reale del voto (o della classifica) di questi elementi (rilevanti)  poiché valutano l’inclusione di un’item rilevante e la precisione di questa inclusione (nel senso che se io faccio una lista di tutti gli item è ovvio che dentro ci saranno quelli rilevanti). Allora tutto quello di cui si ha bisogno è un vettore contenente la classifica predetta degli elementi che si sanno rilevanti. Queste funzioni dipendono dalla lunghezza della lista raccomandata (N).
+
+- in un altro gruppo di metriche ci sono quelle che paragonano la similitudine di due classifiche generali (Spearman e Kendall). In questo caso i parametri sono calcolati per ogni user separatamente. Quindi, diversamente da quanto succede con le metriche con validation set intrinseco, il parametro di quali/quanti elementi omettere rientra. 
+
+- Ho osservato che principalmente nel secondo gruppo di metrica è essenziale che le metriche vengano calcolate per diversi user con diversi validation set e con diversa dimensione del validation set per cercare di includere nell’informazione che queste metriche danno una consistenza statistica. Per le prime metriche questa consistenza statistica è più facilmente ottenuta poiché non calcola una classifica per volta.
+
+
+- Per aggiungere questa consistenza statistica alle nostre metriche entra il k-cross-validation. Che è semplicemente prendere la matrice URM e divider-la in k gruppi di user (es. se ho 10 utenti e voglio k =5 avrò 2 user per gruppo).
+ Poi si fa un girone prendendo ogni volta uno di questi gruppi (test-set), omettendo una percentuale di dati/elementi (validation set) e calcolando per questo validation set le metriche.
+
+
+
+- Io sto finendo le metriche (mi mancano novelity e stabiliti) pensavo se tu potessi fare questa parte del k-cross validation cercando di scrivere una funzione che divide la matrice in k gruppi e poi funzioni che generano il validation set con un parametro di entrata (ad’esempio la percentuale di dati del validation rispetto il test). In questa seconda funzione stai attento al fato che ti ho spiegato del validation set intrinseco per alcune metriche. Poi potresti far finta di predire il validation set (una funzione random qualsiasi ad esempio simile a quella che c’è sul main.cpp) e poi fare un for perché le metriche siano calcolate per ogni test-set e alla fine valuti media e deviazione standard per ogni test-set (attento che per spearman e kendall devi fare anche una media per ogni test set perché calcolano un coefficiente per utente e se il tuo test set ha più utenti devi fare la media). Cosa ne pensi?            
+  
+
+

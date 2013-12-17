@@ -14,7 +14,7 @@
 #include <string>
 #include <algorithm>  //use sort
 #include <cmath>      //use log2 (just c++11)
-//#include "gnuplot-iostream.h" //for draw_ROC
+#include <fstream>
 
 using namespace std;
 
@@ -301,28 +301,37 @@ double AUC_ROC (const vector<data> & relevant,const vector<data> & not_relevant)
     
 };
 
-//void draw_ROC (const vector<data> & relevant,const vector<data> & not_relevant){
-//    
-//    vector<double> recall_n; recall_n.push_back(0);
-//    
-//    vector<double> fallout_n; fallout_n.push_back(0);
-//    
-//    Gnuplot gp;
-//    
-//    for (int i = 1; recall_n.back() < 1 || fallout_n.back() < 1 ; i++) {
-//        recall_n.push_back(RMS_recall(relevant,i));
-//        fallout_n.push_back(RMS_fallout(not_relevant,i));
-//    }
-//    
-//
-//    //impostando parametri grafico:
-//    gp << "set xrange [0:1]\nset yrange [0:1]\n";
-//    
-//	// '-' means read from stdin.  The send1d() function sends data to gnuplot's stdin.
-//	gp << "plot '-' with vectors title 'pts_A', '-' with vectors title 'pts_B'\n";
-//	gp.send1d(fallout_n);
-//	gp.send1d(recall_n);
-//}
+//Ha in output un file di testo con la seguente sintasse: plot([1 2 3 ....],[3 4 5 ...]) con il primo x-assis e secondo y-assis
+void draw_ROC (const vector<data> & relevant,const vector<data> & not_relevant){
+    
+    vector<double> recall_n; recall_n.push_back(0);
+    
+    vector<double> fallout_n; fallout_n.push_back(0);
+    
+    for (int i = 1; recall_n.back() < 1 || fallout_n.back() < 1 ; i++) {
+        recall_n.push_back(RMS_recall(relevant,i));
+        fallout_n.push_back(RMS_fallout(not_relevant,i));
+    }
+    
+    ofstream myfile;
+    myfile.open ("ROC_plot.txt");
+    
+    myfile<<"plot([";
+    for (auto it = fallout_n.begin(); it != fallout_n.end(); it++) {
+        myfile<<*it<<" ";
+    }
+    
+    myfile<<"],[";
+    
+    for (auto it = recall_n.begin(); it != recall_n.end(); it++) {
+        myfile<<*it<<" ";
+    }
+    
+    myfile<<"]);";
+    
+    myfile.close();
+   
+};
 
 //Funzionante
 double RMS_ARHR (const vector<data> & relevant, const int N){
