@@ -57,6 +57,47 @@ bool comparison_func_item_2 (const pair<int,double > & a, const pair<int,double 
     return (a.first < b.first);
 };
 
+int fatorial(int x){
+    int total = 1;
+    while (x > 1) {
+        total*=x;
+        x--;
+    }
+    return total;
+};
+
+int combination(int p, int k){
+    
+    if (p < k) {
+        string s1("In a combination we must have p >= k !");
+        error(s1);
+    }
+    
+    int num = 1, den = 1;
+    
+    if (k >= p-k) {
+        den = fatorial(p-k);
+        while (p > k) {
+            num*=p;
+            p--;
+        }
+        return num/den;
+        
+    }
+    
+    else{
+        den = fatorial(k);
+        int t = p-k;
+        while (p > t) {
+            num*=p;
+            p--;
+        }
+        return num/den;
+        
+    }
+
+};
+
 
         /*
              Queste funzioni devono prendere in INPUT un vettore con i dati previsti da un algoritmo di
@@ -455,51 +496,64 @@ double s_rho (const vector<double> & classifica_1, const vector<double> & classi
         std_2 += ((classifica_2[i] - r_average_2)*(classifica_2[i] - r_average_2));
     }
     
-    std_1 = sqrt((1.0/classifica_1.size())*std_1);
-    std_2 = sqrt((1.0/classifica_1.size())*std_2);
+    std_1 = sqrt((1.0/(classifica_1.size()-1))*std_1);
+    std_2 = sqrt((1.0/(classifica_1.size()-1))*std_2);
     
     
     return ((1.0/classifica_1.size())*contributo*(1.0/(std_1*std_2)));
 };
 
 //INPUT ha la stessa forma dei quello di s_rho. OUTPUT un coefficient k appartenente a [-1,1]
-double k_tau (const vector<double> & classifica_1, const vector<double> & classifica_2){
+double k_tau (const vector<pair<int,double> > & classifica_1, const vector<pair<int,double> > & classifica_2, int C, int D){
     
     if (classifica_1.size() != classifica_2.size()) {
         string s1("In Kendall tau computation, both ranks must equal on number! ");
         error(s1);
     }
    
-    int C = 0;
-    int D = 0;
     int I = 0;
     int I_l = 0;
     
-    for (int i = 0; i < classifica_1.size(); i++) {
+    //Approffito del fatto che i vettori arrivano ordinat in rank e calcolo I e I_l
+    
+    
+    for (int i = 1; i < classifica_1.size(); i++) {
         
-        if (classifica_1[i] == classifica_2[i])
-            C++;
-        else
-            D++;
+        int cont = 0;
+        
+        if (classifica_1[i].second == classifica_1[i-1].second) {
+            int j = i;
+            cont = 1;
+            while (classifica_1[j].second == classifica_1[i-1].second && j < classifica_1.size()) {
+                j++;
+                cont++;
+            }
+            
+            I += combination(cont,2);
+            
+            i = j;
+        }
         
     }
     
-    vector<double> v1 = classifica_1;
-    vector<double> v2 = classifica_2;
-    
-    sort(v1.begin(),v1.end());
-    sort(v2.begin(),v2.end());
-    
-    for (int i = 1; i < v1.size(); i++) {
+    for (int i = 1; i < classifica_1.size(); i++) {
         
-        if (v1[i] == v1[i-1])
-            I++;
+        int cont = 0;
         
-        if (v2[i] == v2[i-1])
-            I_l++;
+        if (classifica_2[i].second == classifica_2[i-1].second) {
+            int j = i;
+            cont = 1;
+            while (classifica_2[j].second == classifica_2[i-1].second && j < classifica_2.size()) {
+                j++;
+                cont++;
+            }
+            
+            I_l += combination(cont,2);
+            
+            i = j;
+        }
         
     }
-    
     
     
     double num = C - D;
@@ -539,7 +593,7 @@ void orderProfile(vector<pair<int,double> > & p, vector<pair<int,double> > & r){
                 j++;
             }
             
-            info.push_back(make_pair(i-1,j));
+            info.push_back(make_pair(i-1,j-1));
             
             i = j;
             
@@ -554,7 +608,7 @@ void orderProfile(vector<pair<int,double> > & p, vector<pair<int,double> > & r){
                 j++;
             }
             
-            info2.push_back(make_pair(i-1,j));
+            info2.push_back(make_pair(i-1,j-1));
             
             i = j;
             
@@ -563,7 +617,8 @@ void orderProfile(vector<pair<int,double> > & p, vector<pair<int,double> > & r){
     }
     
     
-    //Ora ri assegno il rank degli elementi con rate uguali:
+    
+    //Ora li assegno il rank degli elementi con rate uguali:
     
     for (auto it = info.begin(); it != info.end(); it++) {
         
@@ -573,10 +628,10 @@ void orderProfile(vector<pair<int,double> > & p, vector<pair<int,double> > & r){
             sum += p_temp[i].second;
         }
         
-        double rate = sum/(it->second - it->first);
+        double rank = sum/(it->second - it->first + 1.0);
         
         for (int i = it->first; i <= it->second; i++) {
-            p_temp[i].second = rate;
+            p_temp[i].second = rank;
         }
         
     }
@@ -589,518 +644,22 @@ void orderProfile(vector<pair<int,double> > & p, vector<pair<int,double> > & r){
             sum += r_temp[i].second;
         }
         
-        double rate = sum/(it->second - it->first);
+        double rank = sum/(it->second - it->first + 1.0);
         
         for (int i = it->first; i <= it->second; i++) {
-            r_temp[i].second = rate;
+            r_temp[i].second = rank;
         }
         
     }
+    
     
     //finalmente sostituiamo i valori:
     
     p = p_temp;
     r = r_temp;
     
-    sort(p.begin(),p.end(),comparison_func_item_2);
-    sort(r.begin(),r.end(),comparison_func_item_2);
-    
     
 };
-
-//Questa funzione gestisce i dati previsti e reali di un'uttente in modo da usare la funzione "s_rho" nel modo correto, Nel senso che mette a posto i vettori nel
-//modo in cui bisogna chiamare la funzione s_rho
-//In INPUT si attente un vettore previsioni e un vettore real con dentro i rispettivi ratting (accetano anche vettori con rate non assegnati (convenzione = -1))
-//complessità nlogn (uso sort)
-//double compute_s_rho (const vector<pair<int,double> > & prevision,const vector<pair<int,double> > & real){
-//
-//    //per poter non cambiare l'ordine dei vettori in entrata
-//    vector<pair<int,double> > p = prevision;
-//    vector<pair<int,double> > r = real;
-//    
-//    //ordina in base al rating (in ordine decrescente)
-//    sort(p.begin(),p.end(),comparison_func_rate);
-//    sort(r.begin(),r.end(),comparison_func_rate);
-//    
-//    /*   - per testare
-//    //inizio test print (da cancellare fino alla prossima osservazione)
-//    cout<<endl<<endl<<"Vectors ordered in rate: "<<endl;
-//    
-//    for (int i = 0; i < p.size(); i++) {
-//        cout <<p[i].first<<"\t";
-//    }
-//    
-//    cout<<endl;
-//    
-//    for (int i = 0; i < p.size(); i++) {
-//        cout <<setprecision(4)<<p[i].second<<"\t";
-//    }
-//    
-//    cout<<endl<<endl;
-//    
-//    for (int i = 0; i < r.size(); i++) {
-//        cout <<r[i].first<<"\t";
-//    }
-//    
-//    cout<<endl;
-//    
-//    for (int i = 0; i < r.size(); i++) {
-//        cout <<setprecision(4)<<r[i].second<<"\t";
-//    }
-//    
-//    cout<<endl<<endl;
-//    //fine test
-//    */
-//     
-//    //taglio gli elementi senza rate:
-//    auto it = p.begin();
-//    auto it2 = r.begin();
-//    
-//    while(it != p.end() && it->second != -1) {
-//        it++;
-//    }
-//    
-//    while(it2 != r.end() && it2->second != -1) {
-//        it2++;
-//    }
-//    
-//    if (it != p.end())
-//        p.erase(it,p.end());
-//
-//    
-//    if (it2 != r.end())
-//        r.erase(it2,r.end());
-//    
-//    /*
-//    //inizio test print (da cancellare fino alla prossima osservazione)
-//    cout<<endl<<endl<<"Vectors ordered in rate, senza unrated: "<<endl;
-//    
-//    for (int i = 0; i < p.size(); i++) {
-//        cout <<p[i].first<<"\t";
-//    }
-//    
-//    cout<<endl;
-//    
-//    for (int i = 0; i < p.size(); i++) {
-//        cout <<setprecision(4)<<p[i].second<<"\t";
-//    }
-//    
-//    cout<<endl<<endl;
-//    
-//    for (int i = 0; i < r.size(); i++) {
-//        cout <<r[i].first<<"\t";
-//    }
-//    
-//    cout<<endl;
-//    
-//    for (int i = 0; i < r.size(); i++) {
-//        cout <<setprecision(4)<<r[i].second<<"\t";
-//    }
-//    
-//    cout<<endl<<endl;
-//    //fine test
-//    */
-//
-//    
-//    //in questi metto per ogni item il suo corrisondente rank
-//    vector<pair<int,int> > ranked_rated_1;
-//    vector<pair<int,int> > ranked_rated_2;
-//    
-//    int rank = 1;
-//    
-//    for (int i = 0; i < p.size(); i++){
-//        
-//        //Garantire che è strettamente minore (perché per ratting uguali il rank dev'essere uguale)
-//        if (i != 0) {
-//            if (p[i].second < p[i-1].second) {
-//                rank++;
-//            }
-//        }
-//        ranked_rated_1.push_back(make_pair(p[i].first,rank));
-//        
-//    }
-//   
-//    rank = 1;
-//    
-//    for (int i = 0; i < r.size(); i++){
-//        
-//        if (i != 0) {
-//            if (r[i].second < r[i-1].second) {
-//                rank++;
-//            }
-//        }
-//        
-//        ranked_rated_2.push_back(make_pair(r[i].first,rank));
-//    }
-//    
-//    /*
-//    //inizio test print (da cancellare fino alla prossima osservazione)
-//    cout<<endl<<endl<<"Vectors ordered in rate, senza unrated e con rank: "<<endl;
-//    
-//    for (int i = 0; i < ranked_rated_1.size(); i++) {
-//        cout <<ranked_rated_1[i].first<<"\t";
-//    }
-//    
-//    cout<<endl;
-//    
-//    for (int i = 0; i < ranked_rated_1.size(); i++) {
-//        cout <<setprecision(4)<<ranked_rated_1[i].second<<"\t";
-//    }
-//    
-//    cout<<endl<<endl;
-//    
-//    for (int i = 0; i < ranked_rated_2.size(); i++) {
-//        cout <<ranked_rated_2[i].first<<"\t";
-//    }
-//    
-//    cout<<endl;
-//    
-//    for (int i = 0; i < ranked_rated_2.size(); i++) {
-//        cout <<setprecision(4)<<ranked_rated_2[i].second<<"\t";
-//    }
-//    
-//    cout<<endl<<endl;
-//    //fine test
-//     */
-//    
-//    //ordinando i vettori in ordine di item
-//    sort(ranked_rated_1.begin(),ranked_rated_1.end(),comparison_func_item);
-//    sort(ranked_rated_2.begin(),ranked_rated_2.end(),comparison_func_item);
-//    
-//    //l'item minimo e massimo che hanno possibilità di essere stati valutati da entrambi classifiche
-//    int it_min = max(ranked_rated_2[0].first,ranked_rated_1[0].first);
-//    int it_max = min(ranked_rated_1.back().first,ranked_rated_2.back().first);
-//    
-//    //Questi vettori conterrano i rank degli item valutati in entrambi i vettori con ogni indice rappresentando un item (ci saranno solo item valutati realmente
-//    //e previsti)
-//    vector<int> p_to_send;
-//    vector<int> r_to_send;
-//    
-//    int j1=0;
-//    int j2=0;
-//    
-//    
-//    /*
-//    In questo ciclo l'idea è andare a valutare nei vettori ordinati per item, qualli sono gli elementi che sono valutati (presenti) in entrambi vettori
-//    si noti che abbiamo già escluso tutti gli elementi non valutati di ogni vettore ora bisogna solo "filtrare" qualli sono gli item presenti in entrambi
-//    Quindi l'idea è fare un ciclo sugli item (i) che possono essere presenti in entrambi vettori (sicuramente compresi tra it_min e it_max)
-//    Quindi si procede valutando ogni elemento dei vettori:
-//    Es.:
-//    v1 = (1,5),(3,3),(4,2),(7,4),(10,6),(12,1)
-//    v2 = (2,1),(3,2),(5,3),(7,4)
-//    Mio ciclo "for" andrà da 2 a 7 (che sono gli elementi possibilmente present in entrambi vettori)
-//    quindi con i contatori j1 e j2 partendo da 0 verifico ongi elemento dentro il ciclo while:
-//        1ºloop while: (1 ==) ranked_rated_1[j1].first < 2 &&  (2 ==) ranked_rated_2[j2].first == 2 (entro nel loop) e ricado nel 4º caso
-//        2ºloop while: (3 ==) ranked_rated_1[j1].first > 2 &&  (2 ==) ranked_rated_2[j2].first == 2 (non entro nel loop) -> i++ (i == 3)
-//        1ºloop while: (3 ==) ranked_rated_1[j1].first == 3 &&  (2 ==) ranked_rated_2[j2].first < 3 (entro nel loop nel 3º caso)
-//        2ºloop while: (3 ==) ranked_rated_1[j1].first == 3 &&  (3 ==) ranked_rated_2[j2].first == 3 (entro nel loop nel 1º caso e includo nei miei vettori da spedire
-//         il rank del vettore predetto e del vettore reale)
-//     
-//     Continuando il raggionamento i miei vettori risultanti saranno:
-//        p_to_send = 3,4;
-//        r_to_send = 2,4;
-//     */
-//    
-//    for (int i = it_min; i <= it_max; i++) {
-//        
-//        while (ranked_rated_1[j1].first <= i && ranked_rated_2[j2].first <= i) {
-//            
-//            
-//            if (ranked_rated_1[j1].first == i && ranked_rated_2[j2].first == i) {
-//                p_to_send.push_back(ranked_rated_1[j1].second);
-//                r_to_send.push_back(ranked_rated_2[j2].second);
-//                j1++;
-//                j2++;
-//            }
-//            
-//            else if (ranked_rated_1[j1].first < i && ranked_rated_2[j2].first < i){
-//                j1++;
-//                j2++;
-//            }
-//            
-//            else if (ranked_rated_1[j1].first == i && ranked_rated_2[j2].first < i){
-//                j2++;
-//            }
-//            
-//            else if (ranked_rated_1[j1].first < i && ranked_rated_2[j2].first == i){
-//                j1++;
-//            }
-//            
-//        }
-//    }
-//    
-//    /*
-//    //inizio test print (da cancellare fino alla prossima osservazione)
-//    cout<<endl<<endl<<"Vectors sent to func : "<<endl;
-//    
-//    for (int i = 0; i < p_to_send.size(); i++) {
-//        cout <<p_to_send[i]<<"\t";
-//    }
-//    
-//    cout<<endl;
-//    
-//    
-//    
-//    for (int i = 0; i < r_to_send.size(); i++) {
-//        cout <<r_to_send[i]<<"\t";
-//    }
-//    
-//    
-//    cout<<endl<<endl;
-//    //fine test
-//    */
-//    
-//    //A questo punto chiamiamo la funzione s_rho:
-//    
-//    return s_rho (p_to_send,r_to_send);
-//    
-//};
-
-
-//Funzione che gestisce i dati entranti per chiamare corretamente la funzione k_tau
-//double compute_k_tau (const vector<pair<int,double> > & prevision,const vector<pair<int,double> > & real){
-//    
-//    //per poter non cambiare l'ordine dei vettori in entrata
-//    vector<pair<int,double> > p = prevision;
-//    vector<pair<int,double> > r = real;
-//    
-//    //ordina in base al rating (in ordine decrescente)
-//    sort(p.begin(),p.end(),comparison_func_rate);
-//    sort(r.begin(),r.end(),comparison_func_rate);
-//    
-//    /*   - per testare
-//     //inizio test print (da cancellare fino alla prossima osservazione)
-//     cout<<endl<<endl<<"Vectors ordered in rate: "<<endl;
-//     
-//     for (int i = 0; i < p.size(); i++) {
-//     cout <<p[i].first<<"\t";
-//     }
-//     
-//     cout<<endl;
-//     
-//     for (int i = 0; i < p.size(); i++) {
-//     cout <<setprecision(4)<<p[i].second<<"\t";
-//     }
-//     
-//     cout<<endl<<endl;
-//     
-//     for (int i = 0; i < r.size(); i++) {
-//     cout <<r[i].first<<"\t";
-//     }
-//     
-//     cout<<endl;
-//     
-//     for (int i = 0; i < r.size(); i++) {
-//     cout <<setprecision(4)<<r[i].second<<"\t";
-//     }
-//     
-//     cout<<endl<<endl;
-//     //fine test
-//     */
-//    
-//    //taglio gli elementi senza rate:
-//    auto it = p.begin();
-//    auto it2 = r.begin();
-//    
-//    while(it != p.end() && it->second != -1) {
-//        it++;
-//    }
-//    
-//    while(it2 != r.end() && it2->second != -1) {
-//        it2++;
-//    }
-//    
-//    if (it != p.end())
-//        p.erase(it,p.end());
-//    
-//    
-//    if (it2 != r.end())
-//        r.erase(it2,r.end());
-//    
-//    /*
-//     //inizio test print (da cancellare fino alla prossima osservazione)
-//     cout<<endl<<endl<<"Vectors ordered in rate, senza unrated: "<<endl;
-//     
-//     for (int i = 0; i < p.size(); i++) {
-//     cout <<p[i].first<<"\t";
-//     }
-//     
-//     cout<<endl;
-//     
-//     for (int i = 0; i < p.size(); i++) {
-//     cout <<setprecision(4)<<p[i].second<<"\t";
-//     }
-//     
-//     cout<<endl<<endl;
-//     
-//     for (int i = 0; i < r.size(); i++) {
-//     cout <<r[i].first<<"\t";
-//     }
-//     
-//     cout<<endl;
-//     
-//     for (int i = 0; i < r.size(); i++) {
-//     cout <<setprecision(4)<<r[i].second<<"\t";
-//     }
-//     
-//     cout<<endl<<endl;
-//     //fine test
-//     */
-//    
-//    
-//    //in questi metto per ogni item il suo corrisondente rank
-//    vector<pair<int,int> > ranked_rated_1;
-//    vector<pair<int,int> > ranked_rated_2;
-//    
-//    int rank = 1;
-//    
-//    for (int i = 0; i < p.size(); i++){
-//        //Garantire che è strettamente minore (perché per ratting uguali il rank dev'essere uguale)
-//        if (i != 0) {
-//            if (p[i].second < p[i-1].second) {
-//                rank++;
-//            }
-//        }
-//        ranked_rated_1.push_back(make_pair(p[i].first,rank));
-//        
-//    }
-//    
-//    rank = 1;
-//    
-//    for (int i = 0; i < r.size(); i++){
-//        
-//        if (i != 0) {
-//            if (r[i].second < r[i-1].second) {
-//                rank++;
-//            }
-//        }
-//        
-//        ranked_rated_2.push_back(make_pair(r[i].first,rank));
-//    }
-//    
-//    /*
-//     //inizio test print (da cancellare fino alla prossima osservazione)
-//     cout<<endl<<endl<<"Vectors ordered in rate, senza unrated e con rank: "<<endl;
-//     
-//     for (int i = 0; i < ranked_rated_1.size(); i++) {
-//     cout <<ranked_rated_1[i].first<<"\t";
-//     }
-//     
-//     cout<<endl;
-//     
-//     for (int i = 0; i < ranked_rated_1.size(); i++) {
-//     cout <<setprecision(4)<<ranked_rated_1[i].second<<"\t";
-//     }
-//     
-//     cout<<endl<<endl;
-//     
-//     for (int i = 0; i < ranked_rated_2.size(); i++) {
-//     cout <<ranked_rated_2[i].first<<"\t";
-//     }
-//     
-//     cout<<endl;
-//     
-//     for (int i = 0; i < ranked_rated_2.size(); i++) {
-//     cout <<setprecision(4)<<ranked_rated_2[i].second<<"\t";
-//     }
-//     
-//     cout<<endl<<endl;
-//     //fine test
-//     */
-//    
-//    //ordinando i vettori in ordine di item
-//    sort(ranked_rated_1.begin(),ranked_rated_1.end(),comparison_func_item);
-//    sort(ranked_rated_2.begin(),ranked_rated_2.end(),comparison_func_item);
-//    
-//    //l'item minimo e massimo che hanno possibilità di essere stati valutati da entrambi classifiche
-//    int it_min = max(ranked_rated_2[0].first,ranked_rated_1[0].first);
-//    int it_max = min(ranked_rated_1.back().first,ranked_rated_2.back().first);
-//    
-//    //Questi vettori conterrano i rank degli item valutati in entrambi i vettori con ogni indice rappresentando un item (ci saranno solo item valutati realmente
-//    //e previsti)
-//    vector<int> p_to_send;
-//    vector<int> r_to_send;
-//    
-//    int j1=0;
-//    int j2=0;
-//    
-//    
-//    /*
-//     In questo ciclo l'idea è andare a valutare nei vettori ordinati per item, qualli sono gli elementi che sono valutati (presenti) in entrambi vettori
-//     si noti che abbiamo già escluso tutti gli elementi non valutati di ogni vettore ora bisogna solo "filtrare" qualli sono gli item presenti in entrambi
-//     Quindi l'idea è fare un ciclo sugli item (i) che possono essere presenti in entrambi vettori (sicuramente compresi tra it_min e it_max)
-//     Quindi si procede valutando ogni elemento dei vettori:
-//     Es.:
-//     v1 = (1,5),(3,3),(4,2),(7,4),(10,6),(12,1)
-//     v2 = (2,1),(3,2),(5,3),(7,4)
-//     Mio ciclo "for" andrà da 2 a 7 (che sono gli elementi possibilmente present in entrambi vettori)
-//     quindi con i contatori j1 e j2 partendo da 0 verifico ongi elemento dentro il ciclo while:
-//     1ºloop while: (1 ==) ranked_rated_1[j1].first < 2 &&  (2 ==) ranked_rated_2[j2].first == 2 (entro nel loop) e ricado nel 4º caso
-//     2ºloop while: (3 ==) ranked_rated_1[j1].first > 2 &&  (2 ==) ranked_rated_2[j2].first == 2 (non entro nel loop) -> i++ (i == 3)
-//     1ºloop while: (3 ==) ranked_rated_1[j1].first == 3 &&  (2 ==) ranked_rated_2[j2].first < 3 (entro nel loop nel 3º caso)
-//     2ºloop while: (3 ==) ranked_rated_1[j1].first == 3 &&  (3 ==) ranked_rated_2[j2].first == 3 (entro nel loop nel 1º caso e includo nei miei vettori da spedire
-//     il rank del vettore predetto e del vettore reale)
-//     
-//     Continuando il raggionamento i miei vettori risultanti saranno:
-//     p_to_send = 3,4;
-//     r_to_send = 2,4;
-//     */
-//    
-//    for (int i = it_min; i <= it_max; i++) {
-//        
-//        while (ranked_rated_1[j1].first <= i && ranked_rated_2[j2].first <= i) {
-//            
-//            
-//            if (ranked_rated_1[j1].first == i && ranked_rated_2[j2].first == i) {
-//                p_to_send.push_back(ranked_rated_1[j1].second);
-//                r_to_send.push_back(ranked_rated_2[j2].second);
-//                j1++;
-//                j2++;
-//            }
-//            
-//            else if (ranked_rated_1[j1].first < i && ranked_rated_2[j2].first < i){
-//                j1++;
-//                j2++;
-//            }
-//            
-//            else if (ranked_rated_1[j1].first == i && ranked_rated_2[j2].first < i){
-//                j2++;
-//            }
-//            
-//            else if (ranked_rated_1[j1].first < i && ranked_rated_2[j2].first == i){
-//                j1++;
-//            }
-//            
-//        }
-//    }
-//    
-//    /*
-//     //inizio test print (da cancellare fino alla prossima osservazione)
-//     cout<<endl<<endl<<"Vectors sent to func : "<<endl;
-//     
-//     for (int i = 0; i < p_to_send.size(); i++) {
-//     cout <<p_to_send[i]<<"\t";
-//     }
-//     
-//     cout<<endl;
-//     
-//     
-//     
-//     for (int i = 0; i < r_to_send.size(); i++) {
-//     cout <<r_to_send[i]<<"\t";
-//     }
-//     
-//     
-//     cout<<endl<<endl;
-//     //fine test
-//     */
-//    
-//    //A questo punto chiamiamo la funzione s_rho:
-//    
-//    return k_tau (p_to_send,r_to_send);
-//    
-//};
-
 
 //Il vettore popularity contiene per ogni item il numero di uttenti che lo ha valutato
 //Importante nottare che l'indice popularity[0] è il numero di uttenti che ha valutato l'item 1 e così via
@@ -1153,7 +712,7 @@ void print (const vector<data> & relevant){
 };
 
 //Più veloce se si passa solo gli elementi predetti che sono anche in real
-//SEMBRA  FUNZIONANTE
+//FUNZIONANTE
 double compute_s_rho (const vector<pair<int,double> > & prevision,const vector<pair<int,double> > & real){
     
     
@@ -1231,7 +790,8 @@ double compute_s_rho (const vector<pair<int,double> > & prevision,const vector<p
     
     orderProfile(p_to_send,r_to_send);
     
-    
+    sort(p_to_send.begin(),p_to_send.end(),comparison_func_item_2);
+    sort(r_to_send.begin(),r_to_send.end(),comparison_func_item_2);
     
     vector<double> p_to_send_2;
     vector<double> r_to_send_2;
@@ -1320,27 +880,539 @@ double compute_k_tau (const vector<pair<int,double> > & prevision,const vector<p
         }
     }
     
+    int C = 0, D = 0;
+    
+    double diff_real;
+    double diff_pred;
+    
+    
+    for (int i = 0; i < (p_to_send.size() - 1 ); i++) {
+        for (int j = i+1; j < p_to_send.size(); j++) {
+            
+            diff_pred = p_to_send[i].second - p_to_send[j].second;
+            diff_real = r_to_send[i].second - r_to_send[j].second;
+            
+            if (diff_real*diff_pred > 0)
+                C++;
+            
+            else if (diff_real*diff_pred < 0)
+                D++;
+            
+        }
+        
+        
+    }
+    
     //A questo punto i vettori p_to_send e r_to_send sono ordinati in item ma non gli è stato ancora assegnato un rank e a
     //questo proposito chiamo la funzione orderProfile() che assegna i rank e restituisce i vettori ordinati in item
-    
     orderProfile(p_to_send,r_to_send);
     
+    //p_to_send and r_to_send ordered in rank
     
     
-    vector<double> p_to_send_2;
-    vector<double> r_to_send_2;
-    
-    for (auto it = p_to_send.begin(); it != p_to_send.end(); it++) {
-        p_to_send_2.push_back(it->second);
-    }
-    
-    for (auto it = r_to_send.begin(); it != r_to_send.end(); it++) {
-        r_to_send_2.push_back(it->second);
-    }
-    
-    return k_tau (p_to_send_2,r_to_send_2);
+    return k_tau (p_to_send,r_to_send,C,D);
     
 };
+
+
+        /*
+                s_rho e k_tau vecchie (non sono uguali a MATLAB)
+         */
+
+
+//Questa funzione gestisce i dati previsti e reali di un'uttente in modo da usare la funzione "s_rho" nel modo correto, Nel senso che mette a posto i vettori nel
+//modo in cui bisogna chiamare la funzione s_rho
+//In INPUT si attente un vettore previsioni e un vettore real con dentro i rispettivi ratting (accetano anche vettori con rate non assegnati (convenzione = -1))
+//complessità nlogn (uso sort)
+//double compute_s_rho (const vector<pair<int,double> > & prevision,const vector<pair<int,double> > & real){
+//
+//    //per poter non cambiare l'ordine dei vettori in entrata
+//    vector<pair<int,double> > p = prevision;
+//    vector<pair<int,double> > r = real;
+//
+//    //ordina in base al rating (in ordine decrescente)
+//    sort(p.begin(),p.end(),comparison_func_rate);
+//    sort(r.begin(),r.end(),comparison_func_rate);
+//
+//    /*   - per testare
+//    //inizio test print (da cancellare fino alla prossima osservazione)
+//    cout<<endl<<endl<<"Vectors ordered in rate: "<<endl;
+//
+//    for (int i = 0; i < p.size(); i++) {
+//        cout <<p[i].first<<"\t";
+//    }
+//
+//    cout<<endl;
+//
+//    for (int i = 0; i < p.size(); i++) {
+//        cout <<setprecision(4)<<p[i].second<<"\t";
+//    }
+//
+//    cout<<endl<<endl;
+//
+//    for (int i = 0; i < r.size(); i++) {
+//        cout <<r[i].first<<"\t";
+//    }
+//
+//    cout<<endl;
+//
+//    for (int i = 0; i < r.size(); i++) {
+//        cout <<setprecision(4)<<r[i].second<<"\t";
+//    }
+//
+//    cout<<endl<<endl;
+//    //fine test
+//      */
+//
+//
+//    //taglio gli elementi senza rate:
+//    auto it = p.begin();
+//    auto it2 = r.begin();
+//
+//    while(it != p.end() && it->second != -1) {
+//        it++;
+//    }
+//
+//    while(it2 != r.end() && it2->second != -1) {
+//        it2++;
+//    }
+//
+//    if (it != p.end())
+//        p.erase(it,p.end());
+//
+//
+//    if (it2 != r.end())
+//        r.erase(it2,r.end());
+//
+//    /*
+//    //inizio test print (da cancellare fino alla prossima osservazione)
+//    cout<<endl<<endl<<"Vectors ordered in rate, senza unrated: "<<endl;
+//
+//    for (int i = 0; i < p.size(); i++) {
+//        cout <<p[i].first<<"\t";
+//    }
+//
+//    cout<<endl;
+//
+//    for (int i = 0; i < p.size(); i++) {
+//        cout <<setprecision(4)<<p[i].second<<"\t";
+//    }
+//
+//    cout<<endl<<endl;
+//
+//    for (int i = 0; i < r.size(); i++) {
+//        cout <<r[i].first<<"\t";
+//    }
+//
+//    cout<<endl;
+//
+//    for (int i = 0; i < r.size(); i++) {
+//        cout <<setprecision(4)<<r[i].second<<"\t";
+//    }
+//
+//    cout<<endl<<endl;
+//    //fine test
+//    */
+//
+//
+//    //in questi metto per ogni item il suo corrisondente rank
+//    vector<pair<int,int> > ranked_rated_1;
+//    vector<pair<int,int> > ranked_rated_2;
+//
+//    int rank = 1;
+//
+//    for (int i = 0; i < p.size(); i++){
+//
+//        //Garantire che è strettamente minore (perché per ratting uguali il rank dev'essere uguale)
+//        if (i != 0) {
+//            if (p[i].second < p[i-1].second) {
+//                rank++;
+//            }
+//        }
+//        ranked_rated_1.push_back(make_pair(p[i].first,rank));
+//
+//    }
+//
+//    rank = 1;
+//
+//    for (int i = 0; i < r.size(); i++){
+//
+//        if (i != 0) {
+//            if (r[i].second < r[i-1].second) {
+//                rank++;
+//            }
+//        }
+//
+//        ranked_rated_2.push_back(make_pair(r[i].first,rank));
+//    }
+//
+//    /*
+//    //inizio test print (da cancellare fino alla prossima osservazione)
+//    cout<<endl<<endl<<"Vectors ordered in rate, senza unrated e con rank: "<<endl;
+//
+//    for (int i = 0; i < ranked_rated_1.size(); i++) {
+//        cout <<ranked_rated_1[i].first<<"\t";
+//    }
+//
+//    cout<<endl;
+//
+//    for (int i = 0; i < ranked_rated_1.size(); i++) {
+//        cout <<setprecision(4)<<ranked_rated_1[i].second<<"\t";
+//    }
+//
+//    cout<<endl<<endl;
+//
+//    for (int i = 0; i < ranked_rated_2.size(); i++) {
+//        cout <<ranked_rated_2[i].first<<"\t";
+//    }
+//
+//    cout<<endl;
+//
+//    for (int i = 0; i < ranked_rated_2.size(); i++) {
+//        cout <<setprecision(4)<<ranked_rated_2[i].second<<"\t";
+//    }
+//
+//    cout<<endl<<endl;
+//    //fine test
+//     */
+//
+//    //ordinando i vettori in ordine di item
+//    sort(ranked_rated_1.begin(),ranked_rated_1.end(),comparison_func_item);
+//    sort(ranked_rated_2.begin(),ranked_rated_2.end(),comparison_func_item);
+//
+//    //l'item minimo e massimo che hanno possibilità di essere stati valutati da entrambi classifiche
+//    int it_min = max(ranked_rated_2[0].first,ranked_rated_1[0].first);
+//    int it_max = min(ranked_rated_1.back().first,ranked_rated_2.back().first);
+//
+//    //Questi vettori conterrano i rank degli item valutati in entrambi i vettori con ogni indice rappresentando un item (ci saranno solo item valutati realmente
+//    //e previsti)
+//    vector<int> p_to_send;
+//    vector<int> r_to_send;
+//
+//    int j1=0;
+//    int j2=0;
+//
+//
+//    /*
+//    In questo ciclo l'idea è andare a valutare nei vettori ordinati per item, qualli sono gli elementi che sono valutati (presenti) in entrambi vettori
+//    si noti che abbiamo già escluso tutti gli elementi non valutati di ogni vettore ora bisogna solo "filtrare" qualli sono gli item presenti in entrambi
+//    Quindi l'idea è fare un ciclo sugli item (i) che possono essere presenti in entrambi vettori (sicuramente compresi tra it_min e it_max)
+//    Quindi si procede valutando ogni elemento dei vettori:
+//    Es.:
+//    v1 = (1,5),(3,3),(4,2),(7,4),(10,6),(12,1)
+//    v2 = (2,1),(3,2),(5,3),(7,4)
+//    Mio ciclo "for" andrà da 2 a 7 (che sono gli elementi possibilmente present in entrambi vettori)
+//    quindi con i contatori j1 e j2 partendo da 0 verifico ongi elemento dentro il ciclo while:
+//        1ºloop while: (1 ==) ranked_rated_1[j1].first < 2 &&  (2 ==) ranked_rated_2[j2].first == 2 (entro nel loop) e ricado nel 4º caso
+//        2ºloop while: (3 ==) ranked_rated_1[j1].first > 2 &&  (2 ==) ranked_rated_2[j2].first == 2 (non entro nel loop) -> i++ (i == 3)
+//        1ºloop while: (3 ==) ranked_rated_1[j1].first == 3 &&  (2 ==) ranked_rated_2[j2].first < 3 (entro nel loop nel 3º caso)
+//        2ºloop while: (3 ==) ranked_rated_1[j1].first == 3 &&  (3 ==) ranked_rated_2[j2].first == 3 (entro nel loop nel 1º caso e includo nei miei vettori da spedire
+//         il rank del vettore predetto e del vettore reale)
+//
+//     Continuando il raggionamento i miei vettori risultanti saranno:
+//        p_to_send = 3,4;
+//        r_to_send = 2,4;
+//     */
+//
+//    for (int i = it_min; i <= it_max; i++) {
+//
+//        while (ranked_rated_1[j1].first <= i && ranked_rated_2[j2].first <= i) {
+//
+//
+//            if (ranked_rated_1[j1].first == i && ranked_rated_2[j2].first == i) {
+//                p_to_send.push_back(ranked_rated_1[j1].second);
+//                r_to_send.push_back(ranked_rated_2[j2].second);
+//                j1++;
+//                j2++;
+//            }
+//
+//            else if (ranked_rated_1[j1].first < i && ranked_rated_2[j2].first < i){
+//                j1++;
+//                j2++;
+//            }
+//
+//            else if (ranked_rated_1[j1].first == i && ranked_rated_2[j2].first < i){
+//                j2++;
+//            }
+//
+//            else if (ranked_rated_1[j1].first < i && ranked_rated_2[j2].first == i){
+//                j1++;
+//            }
+//
+//        }
+//    }
+//
+//    /*
+//    //inizio test print (da cancellare fino alla prossima osservazione)
+//    cout<<endl<<endl<<"Vectors sent to func : "<<endl;
+//
+//    for (int i = 0; i < p_to_send.size(); i++) {
+//        cout <<p_to_send[i]<<"\t";
+//    }
+//
+//    cout<<endl;
+//
+//
+//
+//    for (int i = 0; i < r_to_send.size(); i++) {
+//        cout <<r_to_send[i]<<"\t";
+//    }
+//
+//
+//    cout<<endl<<endl;
+//    //fine test
+//    */
+//
+//    //A questo punto chiamiamo la funzione s_rho:
+//
+//    return s_rho (p_to_send,r_to_send);
+//
+//};
+
+
+//Funzione che gestisce i dati entranti per chiamare corretamente la funzione k_tau
+//double compute_k_tau (const vector<pair<int,double> > & prevision,const vector<pair<int,double> > & real){
+//
+//    //per poter non cambiare l'ordine dei vettori in entrata
+//    vector<pair<int,double> > p = prevision;
+//    vector<pair<int,double> > r = real;
+//
+//    //ordina in base al rating (in ordine decrescente)
+//    sort(p.begin(),p.end(),comparison_func_rate);
+//    sort(r.begin(),r.end(),comparison_func_rate);
+//
+//    /*   - per testare
+//     //inizio test print (da cancellare fino alla prossima osservazione)
+//     cout<<endl<<endl<<"Vectors ordered in rate: "<<endl;
+//
+//     for (int i = 0; i < p.size(); i++) {
+//     cout <<p[i].first<<"\t";
+//     }
+//
+//     cout<<endl;
+//
+//     for (int i = 0; i < p.size(); i++) {
+//     cout <<setprecision(4)<<p[i].second<<"\t";
+//     }
+//
+//     cout<<endl<<endl;
+//
+//     for (int i = 0; i < r.size(); i++) {
+//     cout <<r[i].first<<"\t";
+//     }
+//
+//     cout<<endl;
+//
+//     for (int i = 0; i < r.size(); i++) {
+//     cout <<setprecision(4)<<r[i].second<<"\t";
+//     }
+//
+//     cout<<endl<<endl;
+//     //fine test
+//     */
+//
+//    //taglio gli elementi senza rate:
+//    auto it = p.begin();
+//    auto it2 = r.begin();
+//
+//    while(it != p.end() && it->second != -1) {
+//        it++;
+//    }
+//
+//    while(it2 != r.end() && it2->second != -1) {
+//        it2++;
+//    }
+//
+//    if (it != p.end())
+//        p.erase(it,p.end());
+//
+//
+//    if (it2 != r.end())
+//        r.erase(it2,r.end());
+//
+//    /*
+//     //inizio test print (da cancellare fino alla prossima osservazione)
+//     cout<<endl<<endl<<"Vectors ordered in rate, senza unrated: "<<endl;
+//
+//     for (int i = 0; i < p.size(); i++) {
+//     cout <<p[i].first<<"\t";
+//     }
+//
+//     cout<<endl;
+//
+//     for (int i = 0; i < p.size(); i++) {
+//     cout <<setprecision(4)<<p[i].second<<"\t";
+//     }
+//
+//     cout<<endl<<endl;
+//
+//     for (int i = 0; i < r.size(); i++) {
+//     cout <<r[i].first<<"\t";
+//     }
+//
+//     cout<<endl;
+//
+//     for (int i = 0; i < r.size(); i++) {
+//     cout <<setprecision(4)<<r[i].second<<"\t";
+//     }
+//
+//     cout<<endl<<endl;
+//     //fine test
+//     */
+//
+//
+//    //in questi metto per ogni item il suo corrisondente rank
+//    vector<pair<int,int> > ranked_rated_1;
+//    vector<pair<int,int> > ranked_rated_2;
+//
+//    int rank = 1;
+//
+//    for (int i = 0; i < p.size(); i++){
+//        //Garantire che è strettamente minore (perché per ratting uguali il rank dev'essere uguale)
+//        if (i != 0) {
+//            if (p[i].second < p[i-1].second) {
+//                rank++;
+//            }
+//        }
+//        ranked_rated_1.push_back(make_pair(p[i].first,rank));
+//
+//    }
+//
+//    rank = 1;
+//
+//    for (int i = 0; i < r.size(); i++){
+//
+//        if (i != 0) {
+//            if (r[i].second < r[i-1].second) {
+//                rank++;
+//            }
+//        }
+//
+//        ranked_rated_2.push_back(make_pair(r[i].first,rank));
+//    }
+//
+//    /*
+//     //inizio test print (da cancellare fino alla prossima osservazione)
+//     cout<<endl<<endl<<"Vectors ordered in rate, senza unrated e con rank: "<<endl;
+//
+//     for (int i = 0; i < ranked_rated_1.size(); i++) {
+//     cout <<ranked_rated_1[i].first<<"\t";
+//     }
+//
+//     cout<<endl;
+//
+//     for (int i = 0; i < ranked_rated_1.size(); i++) {
+//     cout <<setprecision(4)<<ranked_rated_1[i].second<<"\t";
+//     }
+//
+//     cout<<endl<<endl;
+//
+//     for (int i = 0; i < ranked_rated_2.size(); i++) {
+//     cout <<ranked_rated_2[i].first<<"\t";
+//     }
+//
+//     cout<<endl;
+//
+//     for (int i = 0; i < ranked_rated_2.size(); i++) {
+//     cout <<setprecision(4)<<ranked_rated_2[i].second<<"\t";
+//     }
+//
+//     cout<<endl<<endl;
+//     //fine test
+//     */
+//
+//    //ordinando i vettori in ordine di item
+//    sort(ranked_rated_1.begin(),ranked_rated_1.end(),comparison_func_item);
+//    sort(ranked_rated_2.begin(),ranked_rated_2.end(),comparison_func_item);
+//
+//    //l'item minimo e massimo che hanno possibilità di essere stati valutati da entrambi classifiche
+//    int it_min = max(ranked_rated_2[0].first,ranked_rated_1[0].first);
+//    int it_max = min(ranked_rated_1.back().first,ranked_rated_2.back().first);
+//
+//    //Questi vettori conterrano i rank degli item valutati in entrambi i vettori con ogni indice rappresentando un item (ci saranno solo item valutati realmente
+//    //e previsti)
+//    vector<int> p_to_send;
+//    vector<int> r_to_send;
+//
+//    int j1=0;
+//    int j2=0;
+//
+//
+//    /*
+//     In questo ciclo l'idea è andare a valutare nei vettori ordinati per item, qualli sono gli elementi che sono valutati (presenti) in entrambi vettori
+//     si noti che abbiamo già escluso tutti gli elementi non valutati di ogni vettore ora bisogna solo "filtrare" qualli sono gli item presenti in entrambi
+//     Quindi l'idea è fare un ciclo sugli item (i) che possono essere presenti in entrambi vettori (sicuramente compresi tra it_min e it_max)
+//     Quindi si procede valutando ogni elemento dei vettori:
+//     Es.:
+//     v1 = (1,5),(3,3),(4,2),(7,4),(10,6),(12,1)
+//     v2 = (2,1),(3,2),(5,3),(7,4)
+//     Mio ciclo "for" andrà da 2 a 7 (che sono gli elementi possibilmente present in entrambi vettori)
+//     quindi con i contatori j1 e j2 partendo da 0 verifico ongi elemento dentro il ciclo while:
+//     1ºloop while: (1 ==) ranked_rated_1[j1].first < 2 &&  (2 ==) ranked_rated_2[j2].first == 2 (entro nel loop) e ricado nel 4º caso
+//     2ºloop while: (3 ==) ranked_rated_1[j1].first > 2 &&  (2 ==) ranked_rated_2[j2].first == 2 (non entro nel loop) -> i++ (i == 3)
+//     1ºloop while: (3 ==) ranked_rated_1[j1].first == 3 &&  (2 ==) ranked_rated_2[j2].first < 3 (entro nel loop nel 3º caso)
+//     2ºloop while: (3 ==) ranked_rated_1[j1].first == 3 &&  (3 ==) ranked_rated_2[j2].first == 3 (entro nel loop nel 1º caso e includo nei miei vettori da spedire
+//     il rank del vettore predetto e del vettore reale)
+//
+//     Continuando il raggionamento i miei vettori risultanti saranno:
+//     p_to_send = 3,4;
+//     r_to_send = 2,4;
+//     */
+//
+//    for (int i = it_min; i <= it_max; i++) {
+//
+//        while (ranked_rated_1[j1].first <= i && ranked_rated_2[j2].first <= i) {
+//
+//
+//            if (ranked_rated_1[j1].first == i && ranked_rated_2[j2].first == i) {
+//                p_to_send.push_back(ranked_rated_1[j1].second);
+//                r_to_send.push_back(ranked_rated_2[j2].second);
+//                j1++;
+//                j2++;
+//            }
+//
+//            else if (ranked_rated_1[j1].first < i && ranked_rated_2[j2].first < i){
+//                j1++;
+//                j2++;
+//            }
+//
+//            else if (ranked_rated_1[j1].first == i && ranked_rated_2[j2].first < i){
+//                j2++;
+//            }
+//
+//            else if (ranked_rated_1[j1].first < i && ranked_rated_2[j2].first == i){
+//                j1++;
+//            }
+//
+//        }
+//    }
+//
+//    /*
+//     //inizio test print (da cancellare fino alla prossima osservazione)
+//     cout<<endl<<endl<<"Vectors sent to func : "<<endl;
+//
+//     for (int i = 0; i < p_to_send.size(); i++) {
+//     cout <<p_to_send[i]<<"\t";
+//     }
+//
+//     cout<<endl;
+//
+//
+//
+//     for (int i = 0; i < r_to_send.size(); i++) {
+//     cout <<r_to_send[i]<<"\t";
+//     }
+//
+//
+//     cout<<endl<<endl;
+//     //fine test
+//     */
+//
+//    //A questo punto chiamiamo la funzione s_rho:
+//
+//    return k_tau (p_to_send,r_to_send);
+//
+//};
 
 
 

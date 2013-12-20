@@ -118,7 +118,7 @@ int main() {
     
     cout<<"Fallout is: "<<RMS_fallout(v2,N)<<endl;
     
-    cout<<"End first part."<<endl<<endl;
+    cout<<"End second part."<<endl<<endl;
     
     //fine seconda parte
     
@@ -243,9 +243,9 @@ int main() {
     
     cout<<"Fifth part: "<<endl;
     
-    cout<<"Spearsman rho: "<<compute_s_rho(v3,v4)<<endl;
+    cout<<"Spearsman rho: "<<compute_s_rho(v4,v3)<<endl;
     
-    cout<<"Kendau tau: "<<compute_k_tau(v3,v4)<<endl;
+    cout<<"Kendau tau: "<<compute_k_tau(v4,v3)<<endl;
     
     
     cout<<"End fifth part."<<endl<<endl;
